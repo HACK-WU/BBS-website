@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <!-- 最新版本的 Bootstrap 核心 CSS 文件 -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-8 col-md-offset-2">
+            <h1 class="text-center">用户注册</h1>
+            <form id="myform">  <!--这里我们不使用form表单提交数据，只是单纯使用一下form标签而已-->
+               {% csrf_token %}
+                 {% for form in form_obj %}
+                    <div class="form-group ">
+                        <label for="{{ form.auto_id }}">{{ form.label }}</label>
+                    {{ form }}
+                    <span style="color:red" class="pull-right">{{ form.errors.0 }}</span>   <!--报错信息-->
+                    </div>
+                {% endfor %}
+            <div class="form-group">
+                <label for="myfile">头像
+                    {% load static %}
+                    <!--\{\% load atatic %} 加载静态文件-->
+                    <img src="{% static 'img/default.png' %}" alt=""  width="80" style="margin-left: 10px" id="myimg">
+                    <!--如果要使用静态文件内信息，需要加上 static-->
+                </label>
+                <input type="file" id="myfile" name="avatar" style="display: none">
+            </div>
+            <input type="button"  value="注册" class="btn-primary pull-right" id="id_commit">
+            </form>
+
+        </div>
+        
+    </div>
+    
+</div>
+
+
+<script>
+//*********************************将用户的选择到的头像显示在前端页面*********************************
+    $("#myfile").change(function () {
+       //文件阅读器对象
+        //1、先生成一个文件阅读器对象
+        let myFileReaderObj=new FileReader();
+        //2、获取用户上传的头像文件
+        let fileObj=$(this)[0].files[0];
+        //3、将文件对象交给阅读器对象读取
+        myFileReaderObj.readAsDataURL(fileObj) //这是异步操作并且是IO操作
+        //4、利用文件阅读器，将文件展示到前端页面  修改img 的src属性
+        //等待文件阅读器读取完毕之后，在执行
+        myFileReaderObj.onload=function(){
+            $("#myimg").attr("src",myFileReaderObj.result)  //改变img标签属性src的值，值为一串二进制信息，也可以用于显示图片。
+        }
+    });
+
+//*******************************点击注册，提交用户信息*********************************************
+    $("#id_commit").click(function () {
+        //我们发送的数据，既包括普通键值对，又包括文件
+        let formDataObj=new FormData();
+        /*
+         *当需要向后端提交的数据，包含文件时，不能使用字典的形式，因为字典知识存储简单的字符串信息。
+         *  -文件，一般都是以二进制的形式进行存储。
+         *  -这个时候可以将文件信息，存储在FormData()对象中。然后然后通过传递formData()对象，将信息发送给后端。
+         *  -FormData()对象类似于字典，也是键值对的形式存储信息，
+         *      -但是FormData()的键值可以存放二进制信息。而字典，一般只能存储简单的字符信息。
+         *
+         */
+            {#console.log($("#myform").serializeArray()) //将form表单内一组键值对封装成一个字典，然后每个字段又封装在一个数组中#}
+        $.each($("#myform").serializeArray(),function(index,obj) {  //index,就是数组的索引；obj,对应索引的元素
+            formDataObj.append(obj.name, obj.value)  //将表单中的数据，以键值对的方式存放在FormData()对象中
+        });
+        formDataObj.append('avatar',$('#myfile')[0].files[0]);
+        $.ajax({
+            url:"",
+            type:"post",
+            data:formDataObj,
+            contentType:false,
+            processData:false,
+            /*
+             *  http协议，默认的请求头一般是application/x-www-form-urlencoded，只能传输简单字符信息。
+             *  当传送的信息，包含有文件时，需要更改请求头contentType，这里改为False。
+             *      - contentType:false,
+             *      - processData:false,
+             */
+            success:function(args){   //args就是后端传来的信息，是个JsonResponse类型，类似于字典
+              if (args.code==1000){    //判断状态码，code=1000表示验证通过，这是后端自己定义的。
+                  //跳转到登录页面
+                  window.location.href=args.url
+              }else{
+                //如何将对应的错误提示展示到对应的input框下面
+                //forms组件渲染的标签的id值都是 id_字段名
+                  $.each(args.msg,function(index,obj){  //args.msg,报错信息是一个序列。
+                      {#console.log(index,obj)#}
+                      //index就是对应的forms类中各个数据字段的名称。
+                      //obj 存放的就是报错信息。
+                      if (obj[0]=="两次密码不一致"){
+                          $("#id_confirm_password").next().text("两次密码不一致").parent().addClass("has-error")
+                      }
+                      let targetId ="#id_"+index;
+                      $(targetId).next().text(obj[0]).parent().addClass("has-error")    //addClass()表示增加class属性值的内容
+                      /*
+                       *$("target"),next()   表示这个标签的下一个标签，所以指的就是<span>标签。也就是报错信息
+                       * $("span").text(obj[0])表示更改这个标签里的内容，改为报错信息。
+                       * $("span").parent()表示这个标签的父标签，也就是<div>
+                       * $("div").addClass("has-error") #表示增加这个标签class属性的内容。
+                       */
+                  })
+              }
+            }
+        })
+    });
+
+//****************************给input标签，绑定焦点事件**********************************
+    $("input").focus(function () {
+        //将input下面的span标签和外面的div标签修改内容及属性
+        $(this).next().text("").parent().removeClass("has-error")   //removeClass()表示移除class属性的某个内容。
+    })
+</script>
+</body>
+</html>

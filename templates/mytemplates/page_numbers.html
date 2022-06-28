@@ -1,0 +1,31 @@
+<nav aria-label="Page navigation">
+    <ul class="pagination">
+        <li>                        <!--显示上一页-->
+            {% if current_page.has_previous %}
+                <a href="?page={{ current_page.previous_page_number }}" aria-label="Previous">
+            {% else %}
+                <a class="disabled" href="" aria-label="Previous">
+            {% endif %}
+            <span aria-hidden="true">上一页</span>
+            </a>
+        </li>
+
+        {% for item in  page_range %}   <!--显示中间的页码-->
+            {% if num == item %}
+                <li class="active"><a href="?page={{ item }}">{{ item }}</a> </li>
+            {% else %}
+                <li ><a href="?page={{ item }}">{{ item }}</a> </li>
+            {% endif %}
+        {% endfor %}
+
+        <li>                        <!--显示下一页-->
+            {% if current_page.has_next %}  <!--判断当前页面是否有下一页-->
+                <a href="?page={{ current_page.next_page_number }}" aria-label="Next">  <!--有则加上下一页的链接-->
+            {% else %}
+                <a  class="disabled" href="" aria-label="Next">     <!--没有则链接失效-->
+            {% endif %}
+            <span aria-hidden="true">下一页</span>
+            </a>
+        </li>
+    </ul>
+</nav>

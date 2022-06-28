@@ -1,0 +1,64 @@
+{% extends "backend/base.html" %}
+
+{% block article %}
+    <!--文章添加页面-->
+    <!--直接利用form表单提交数据-->
+    <form aoction="#" method="post">
+        {% csrf_token %}
+    <p>标签</p>
+    <div class="">
+        <input type="text" name="title" class="form-control">
+    </div>
+    <P>内容</P>
+    <div class="">
+        <textarea id="editor_id" name="content" style="width:700px;height:300px;">
+        &lt;strong&gt;HTML内容&lt;/strong&gt;
+        </textarea>
+    </div>
+    <p>分类</p>
+    <div class="">
+        {% for category in category_list %}
+            <input type="radio" value="{{ category.pk }}" name="category" >{{ category.name }}
+        {% endfor %}
+    </div>
+        <p>标签</p>
+        <div class="">
+            {% for tag in tag_list %}
+                <input type="checkbox" value="{{ tag.pk }} " name="tag" >{{ tag.name }}
+            {% endfor %}
+        </div>
+    <input type="submit" value="提交 ">
+    </form>
+{% endblock %}
+
+
+{% block js %}
+    {% load static %}
+    <script charset="utf-8" src="{% static "kindeditor/kindeditor-all.js" %}"></script>
+    <script charset="utf-8" src="{% static "kindeditor/lang/zh-CN.js" %}"></script>
+    <script>
+        KindEditor.ready(function(K) {
+            window.editor = K.create('#editor_id',{
+                width : '90%',
+                height:"400px",
+                {#items:[ //控制富文本编辑器的功能，不写，默认全部展示#}
+                {#    'source', '|', 'undo', 'redo', '|', 'preview', 'print', 'template', 'code', 'cut', 'copy', 'paste',#}
+                {#    'plainpaste', 'wordpaste', '|', 'justifyleft', 'justifycenter', 'justifyright',#}
+                {#    'justifyfull', 'insertorderedlist', 'insertunorderedlist', 'indent', 'outdent', 'subscript',#}
+                {#    'superscript', 'clearhtml', 'quickformat', 'selectall', '|', 'fullscreen', '/',#}
+                {#    'formatblock', 'fontname', 'fontsize', '|', 'forecolor', 'hilitecolor', 'bold',#}
+                {#    'italic', 'underline', 'strikethrough', 'lineheight', 'removeformat', '|', 'image', 'multiimage',#}
+                {#    'flash', 'media', 'insertfile', 'table', 'hr', 'emoticons', 'baidumap', 'pagebreak',#}
+                {#    'anchor', 'link', 'unlink', '|', 'about'#}
+                {#],#}
+                resizeType:1, //2或1或0，2时可以拖动改变宽度和高度，1时只能改变高度，0时不能拖动。
+                uploadJson: "/upload_image/",   //上传图片的后端路径
+                allowFileManager : true ,
+                extraFileUploadParams:{
+                    "csrfmiddlewaretoken":"{{ csrf_token }}",
+                }
+            });
+        });
+    </script>
+
+{% endblock js %}
