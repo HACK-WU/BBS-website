@@ -1,0 +1,19 @@
+FROM centos:7.9.2009
+
+RUN yum -y install epel-release*
+RUN yum -y groupinstall "Development tools" 
+RUN yum install -y  openssl-devel bzip2-devel expat-devel gdbm-devel readline-devel sqlite-devel 
+
+COPY Python-3.9.7 /root/Python-3.9.7
+WORKDIR /root/Python-3.9.7
+RUN set -eu;./configure --prefix=/usr/local/python3; make -j4  && make install; \
+	rm -fr /root/Python-3.9.7; \
+    ln -s /usr/local/python3/bin/python3.9 /usr/bin/python3; \
+    ln -s /usr/local/python3/bin/pip3.9 /usr/bin/pip3;
+
+COPY requirements.txt /root/requirements.txt
+COPY env.sh /root/env.sh
+COPY entrypoint.sh /root/entrypoint.sh
+RUN /root/env.sh
+
+ENTRYPOINT ["/root/entrypoint.sh"]
